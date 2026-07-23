@@ -1,71 +1,16 @@
-# Avalia.ai
+# React + Vite
 
-O Avalia.ai é uma aplicação web desenvolvida para centralizar e gerenciar processos de avaliação de desempenho entre colaboradores dentro de uma organização.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-A plataforma permite que gestores organizem ciclos de avaliação, definam equipes, acompanhem o progresso das avaliações e consolidem os resultados em um único ambiente.
+Currently, two official plugins are available:
 
-## Principais funcionalidades
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-- Autenticação de usuários;
-- Gerenciamento de Times;
-- Cadastro e gerenciamento de colaboradores;
-- Gerenciamento de ciclos de avaliação;
-- Definição de formulários e critérios de avaliação;
-- Envio e preenchimento de avaliações entre colaboradores;
-- Consolidação e visualização dos resultados das avaliações;
+## React Compiler
 
-## Stack
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-- React;
-- Vite;
-- Tailwind CSS;
-- Supabase;
-- React Hook Form;
-- Zod.
+## Expanding the ESLint configuration
 
-## Como executar
-
-### 1. Pré-requisitos
-
-- Node.js 20 ou superior;
-- npm.
-
-### 2. Baixe o projeto
-
-Clone o repositório.
-
-```bash
-git clone <URL_DO_REPOSITORIO>
-cd Projeto_Feedback
-```
-
-### 3. Adicione as configurações
-
-Crie o arquivo `.env.local`.
-
-O arquivo terá as configurações de acesso ao Supabase:
-
-```env
-VITE_SUPABASE_URL=URL_FORNECIDA_PELA_EQUIPE
-VITE_SUPABASE_PUBLISHABLE_KEY=CHAVE_FORNECIDA_PELA_EQUIPE
-```
-
-Não altere, publique ou compartilhe esse arquivo.
-
-### 4. Instale as dependências
-
-```bash
-npm install
-```
-
-### 5. Inicie a aplicação
-
-```bash
-npm run dev
-```
-
-O terminal mostrará o endereço local da aplicação, normalmente:
-
-```text
-http://localhost:5173
-```
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
