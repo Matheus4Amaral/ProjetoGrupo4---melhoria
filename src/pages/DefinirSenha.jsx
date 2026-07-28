@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Navigate, useNavigate } from "react-router-dom";
-import { CheckCircle2, Link2Off } from "lucide-react";
+import { CheckCircle2, Link2Off, Eye ,EyeOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,8 @@ import { AuthLoadingScreen } from "@/routes/ProtectedRoute";
 function DefinirSenha() {
   const navigate = useNavigate();
   const { session, profile, loading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [hasInviteMarker] = useState(
     () => sessionStorage.getItem(FIRST_ACCESS_INVITE_MARKER) === "true"
   );
@@ -107,33 +109,59 @@ function DefinirSenha() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="new-password">Nova senha</Label>
-              <Input
-                id="new-password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="Mínimo de 8 caracteres"
-                aria-invalid={Boolean(errors.password)}
-                {...register("password")}
-              />
-              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-            </div>
+          <div className="flex flex-col gap-1.5">
+          <Label htmlFor="new-password">Nova senha</Label>
+          <div className="relative">
+            <Input
+              id="new-password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="Mínimo de 8 caracteres"
+              aria-invalid={Boolean(errors.password)}
+              className="pr-9"
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              aria-pressed={showPassword}
+              tabIndex={-1}
+              className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-r-lg"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+        </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="confirm-password">Confirmar senha</Label>
+            <Label htmlFor="confirm-password">Confirmar senha</Label>
+            <div className="relative">
               <Input
                 id="confirm-password"
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 autoComplete="new-password"
                 placeholder="Repita a nova senha"
                 aria-invalid={Boolean(errors.confirmPassword)}
+                className="pr-9"
                 {...register("confirmPassword")}
               />
-              {errors.confirmPassword && (
-                <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
+                aria-pressed={showConfirmPassword}
+                tabIndex={-1}
+                className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-r-lg"
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
+            {errors.confirmPassword && (
+              <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
+            )}
+          </div>
 
             {submitError && (
               <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
