@@ -47,8 +47,7 @@ function TeamForm({ team, onSave, onCancel, submitLabel }) {
   const {
     register,
     handleSubmit,
-    reset,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(teamSchema),
     defaultValues: { nome: team?.nome || "", descricao: team?.descricao || "" },
@@ -59,34 +58,29 @@ function TeamForm({ team, onSave, onCancel, submitLabel }) {
 
     try {
       await onSave(values);
-      reset({ nome: values.nome, descricao: values.descricao || "" });
     } catch (error) {
       setSubmitError(error.message);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-4" noValidate>
-      <div className="space-y-1.5">
-        <Label htmlFor={`team-name-${team?.id || "new"}`}>Nome do time</Label>
-        <Input
-          id={`team-name-${team?.id || "new"}`}
-          placeholder="Ex.: Produto e Experiência"
-          aria-invalid={Boolean(errors.nome)}
-          autoFocus
-          {...register("nome")}
-        />
-        {errors.nome && <p className="text-xs text-destructive">{errors.nome.message}</p>}
-      </div>
+    <form onSubmit={handleSubmit(submit)} className="space-y-5" noValidate>
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="team-name">Nome do time</Label>
+          <Input
+            id="team-name"
+            aria-invalid={Boolean(errors.nome)}
+            autoFocus
+            {...register("nome")}
+          />
+          {errors.nome && <p className="text-xs text-destructive">{errors.nome.message}</p>}
+        </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor={`team-description-${team?.id || "new"}`}>Descrição</Label>
-        <Textarea
-          id={`team-description-${team?.id || "new"}`}
-          placeholder="Contexto, projeto ou responsabilidade principal do time"
-          rows={3}
-          {...register("descricao")}
-        />
+        <div className="space-y-1.5">
+          <Label htmlFor="team-description">Descrição</Label>
+          <Textarea id="team-description" rows={3} {...register("descricao")} />
+        </div>
       </div>
 
       {submitError && (
@@ -99,7 +93,7 @@ function TeamForm({ team, onSave, onCancel, submitLabel }) {
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isSubmitting || (Boolean(team) && !isDirty)}>
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Salvando..." : submitLabel}
         </Button>
       </DialogFooter>
@@ -108,13 +102,17 @@ function TeamForm({ team, onSave, onCancel, submitLabel }) {
 }
 
 function EditTeamForm({ team, profiles, onSave, onCancel, externalError }) {
+  const colaboradores = useMemo(
+    () => profiles.filter((profile) => profile.papel === "colaborador"),
+    [profiles],
+  );
+
   const initialMemberIds = useMemo(
     () => new Set(team.members.map((member) => member.id)),
     [team.members],
   );
-  const [selectedMemberIds, setSelectedMemberIds] = useState(
-    () => new Set(team.members.map((member) => member.id)),
-  );
+
+  const [selectedMemberIds, setSelectedMemberIds] = useState(initialMemberIds);
   const [submitError, setSubmitError] = useState("");
   const {
     register,
@@ -175,20 +173,22 @@ function EditTeamForm({ team, profiles, onSave, onCancel, externalError }) {
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold text-foreground">Membros</h3>
-            <p className="text-xs text-muted-foreground">Marque todas as pessoas que devem fazer parte deste time.</p>
+            <p className="text-xs text-muted-foreground">
+              Selecione os colaboradores que serão adicionados ao time.
+            </p>
           </div>
           <Badge variant="secondary">
             {selectedMemberIds.size} selecionado{selectedMemberIds.size === 1 ? "" : "s"}
           </Badge>
         </div>
 
-        {profiles.length === 0 ? (
+        {colaboradores.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border py-7 text-center text-sm text-muted-foreground">
-            Nenhuma pessoa disponível.
+            Nenhum colaborador disponível.
           </div>
         ) : (
           <div className="max-h-64 divide-y divide-border overflow-y-auto rounded-lg border border-border px-3">
-            {profiles.map((profile) => {
+            {colaboradores.map((profile) => {
               const checked = selectedMemberIds.has(profile.id);
               return (
                 <label
@@ -344,7 +344,7 @@ function Teams() {
     try {
       const created = await createTeam(values);
       setModal(CLOSED_MODAL);
-      setNotice(`Time “${created.nome}” criado com sucesso.`);
+      setNotice(`Time "${created.nome}" criado com sucesso.`);
       await loadStructure({ showLoading: false });
     } finally {
       setBusyAction("");
@@ -376,7 +376,7 @@ function Teams() {
       }
 
       setModal(CLOSED_MODAL);
-      setNotice(`Alterações de “${updated.nome}” salvas.`);
+      setNotice(`Alterações de "${updated.nome}" salvas.`);
       await loadStructure({ showLoading: false });
     } finally {
       setBusyAction("");
@@ -392,7 +392,7 @@ function Teams() {
       const name = modalTeam.nome;
       await deleteTeam(modalTeam.id);
       setModal(CLOSED_MODAL);
-      setNotice(`Time “${name}” excluído com sucesso.`);
+      setNotice(`Time "${name}" excluído com sucesso.`);
       await loadStructure({ showLoading: false });
     } catch (error) {
       setModalError(error.message);
@@ -484,7 +484,7 @@ function Teams() {
           <DialogContent className="max-w-2xl" onClose={closeModal}>
             <DialogHeader>
               <DialogTitle>Editar time</DialogTitle>
-              <DialogDescription>Atualize os dados e organize os membros de “{modalTeam.nome}”.</DialogDescription>
+              <DialogDescription>Atualize os dados e organize os membros de "{modalTeam.nome}".</DialogDescription>
             </DialogHeader>
             <EditTeamForm
               key={`${modalTeam.id}:${modalTeam.nome}:${modalTeam.descricao || ""}:${modalTeam.members.map((member) => member.id).join(",")}`}
@@ -500,7 +500,7 @@ function Teams() {
         {modal.type === "delete" && modalTeam && (
           <DialogContent onClose={closeModal}>
             <DialogHeader>
-              <DialogTitle>Excluir “{modalTeam.nome}”?</DialogTitle>
+              <DialogTitle>Excluir "{modalTeam.nome}"?</DialogTitle>
               <DialogDescription>
                 {modalTeam.memberCount === 0
                   ? "Este time não possui membros."
