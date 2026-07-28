@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { cn } from "@/lib/utils";
 import { completeEvaluation, getEvaluationAssignment, listEvaluationCycles, saveEvaluationDraft } from "@/services/evaluationsService";
 
@@ -25,6 +26,7 @@ export default function NovaAvaliacao() {
   const [error, setError] = useState("");
   const [saveState, setSaveState] = useState("idle");
   const [finalizing, setFinalizing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const saveChain = useRef(Promise.resolve());
   const debounce = useRef(null);
 
@@ -75,12 +77,13 @@ export default function NovaAvaliacao() {
   const complete = total > 0 && answered === total && strengths.length <= MAX_CHARS && improvements.length <= MAX_CHARS;
 
   const finalize = async () => {
-    if (!complete || !window.confirm("Finalizar esta avaliação? Depois disso ela não poderá ser editada.")) return;
+    if (!complete) return;
     clearTimeout(debounce.current); setFinalizing(true); setError("");
     try {
       await saveChain.current.catch(() => undefined);
       await completeEvaluation(assignment.id, answers, strengths, improvements);
       setAssignment(null); setSaveState("idle"); await loadCycles();
+      setConfirmOpen(false);
     } catch (err) { setError(err.message); }
     finally { setFinalizing(false); }
   };
@@ -101,8 +104,18 @@ export default function NovaAvaliacao() {
       )}
 
       {formLoading && <div className="py-10 text-center text-sm text-muted-foreground">Carregando formulário...</div>}
-      {assignment && !formLoading && <Card><CardHeader><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-primary">{assignment.cicloNome}</p><CardTitle>{assignment.autoavaliacao ? "Minha autoavaliação" : assignment.avaliadoNome}</CardTitle></div><span className={cn("text-xs", saveState === "error" ? "text-destructive" : "text-muted-foreground")}>{saveState === "saving" ? "Salvando..." : saveState === "saved" ? "Rascunho salvo" : saveState === "error" ? "Falha ao salvar" : ""}</span></div></CardHeader><CardContent className="space-y-7"><div><div className="mb-2 flex justify-between text-sm"><span>{answered} de {total} competências</span><span>{total ? Math.round(answered / total * 100) : 0}%</span></div><Progress value={total ? answered / total * 100 : 0}/></div>{assignment.perguntas.map((question) => <fieldset key={question.id} className="space-y-3 rounded-lg border p-4"><legend className="px-1 font-semibold">{question.competencia}</legend>{question.descricaoNiveis && <p className="text-sm text-muted-foreground">{question.descricaoNiveis}</p>}<div className="flex flex-wrap gap-2">{NOTES.map((note) => <button type="button" key={note} aria-label={`Nota ${note} em ${question.competencia}`} aria-pressed={answers[question.id] === note} onClick={() => updateAnswer(question.id, note)} className={cn("h-10 w-10 rounded-md border text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", answers[question.id] === note ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted")}>{note}</button>)}</div></fieldset>)}<div className="grid gap-5 md:grid-cols-2"><label className="space-y-2 text-sm font-medium">Pontos fortes<Textarea value={strengths} maxLength={MAX_CHARS} onChange={(e) => updateStrengths(e.target.value)} rows={5}/><span className="block text-right text-xs text-muted-foreground">{strengths.length}/{MAX_CHARS}</span></label><label className="space-y-2 text-sm font-medium">Pontos de melhoria<Textarea value={improvements} maxLength={MAX_CHARS} onChange={(e) => updateImprovements(e.target.value)} rows={5}/><span className="block text-right text-xs text-muted-foreground">{improvements.length}/{MAX_CHARS}</span></label></div><div className="flex flex-wrap justify-end gap-2"><Button variant="outline" onClick={() => setAssignment(null)}>Voltar</Button><Button disabled={!complete || finalizing || saveState === "saving"} onClick={finalize}>{finalizing ? "Finalizando..." : "Finalizar avaliação"}</Button></div></CardContent></Card>}
+      {assignment && !formLoading && <Card><CardHeader><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-primary">{assignment.cicloNome}</p><CardTitle>{assignment.autoavaliacao ? "Minha autoavaliação" : assignment.avaliadoNome}</CardTitle></div><span className={cn("text-xs", saveState === "error" ? "text-destructive" : "text-muted-foreground")}>{saveState === "saving" ? "Salvando..." : saveState === "saved" ? "Rascunho salvo" : saveState === "error" ? "Falha ao salvar" : ""}</span></div></CardHeader><CardContent className="space-y-7"><div><div className="mb-2 flex justify-between text-sm"><span>{answered} de {total} competências</span><span>{total ? Math.round(answered / total * 100) : 0}%</span></div><Progress value={total ? answered / total * 100 : 0}/></div>{assignment.perguntas.map((question) => <fieldset key={question.id} className="space-y-3 rounded-lg border p-4"><legend className="px-1 font-semibold">{question.competencia}</legend>{question.descricaoNiveis && <p className="text-sm text-muted-foreground">{question.descricaoNiveis}</p>}<div className="flex flex-wrap gap-2">{NOTES.map((note) => <button type="button" key={note} aria-label={`Nota ${note} em ${question.competencia}`} aria-pressed={answers[question.id] === note} onClick={() => updateAnswer(question.id, note)} className={cn("h-10 w-10 rounded-md border text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", answers[question.id] === note ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted")}>{note}</button>)}</div></fieldset>)}<div className="grid gap-5 md:grid-cols-2"><label className="space-y-2 text-sm font-medium">Pontos fortes<Textarea value={strengths} maxLength={MAX_CHARS} onChange={(e) => updateStrengths(e.target.value)} rows={5} className="field-sizing-fixed resize-none overflow-y-auto"/><span className="block text-right text-xs text-muted-foreground">{strengths.length}/{MAX_CHARS}</span></label><label className="space-y-2 text-sm font-medium">Pontos de melhoria<Textarea value={improvements} maxLength={MAX_CHARS} onChange={(e) => updateImprovements(e.target.value)} rows={5} className="field-sizing-fixed resize-none overflow-y-auto"/><span className="block text-right text-xs text-muted-foreground">{improvements.length}/{MAX_CHARS}</span></label></div><div className="flex flex-wrap justify-end gap-2"><Button variant="outline" onClick={() => setAssignment(null)}>Voltar</Button><Button disabled={!complete || finalizing || saveState === "saving"} onClick={() => setConfirmOpen(true)}>{finalizing ? "Finalizando..." : "Finalizar avaliação"}</Button></div></CardContent></Card>}
       <span className="sr-only">{actionable.length} avaliações acionáveis</span>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Finalizar avaliação"
+        description="Finalizar esta avaliação? Depois disso ela não poderá ser editada."
+        confirmLabel="Finalizar"
+        loading={finalizing}
+        onConfirm={finalize}
+      />
     </div>
   );
 }
