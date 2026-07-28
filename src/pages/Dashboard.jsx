@@ -1,4 +1,4 @@
-import { Users, MessageSquare, Star, ClipboardList } from "lucide-react";
+import { Users, MessageSquare, ClipboardList } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import FeedbackChart from "@/components/dashboard/FeedbackChart";
 
@@ -28,10 +28,17 @@ function Dashboard() {
         .single();
 
 
-      // Total de feedbacks
-      const { count: feedbackCount } = await supabase
-        .from("respostas_avaliacao")
-        .select("*", { count: "exact", head: true });
+      
+      const feedbackQuery = ["admin", "rh"].includes(perfil?.papel)
+        ? supabase
+          .from("atribuicoes_avaliacao")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "completed")
+        : supabase
+          .from("respostas_avaliacao")
+          .select("id", { count: "exact", head: true });
+
+      const { count: feedbackCount } = await feedbackQuery;
 
 
       setTotalFeedbacks(feedbackCount || 0);

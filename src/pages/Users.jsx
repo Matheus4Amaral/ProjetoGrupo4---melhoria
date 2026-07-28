@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MailPlus, RefreshCw, UserRound } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,8 +34,6 @@ function Users() {
   const [profiles, setProfiles] = useState([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [submitError, setSubmitError] = useState("");
   const {
     register,
     handleSubmit,
@@ -82,21 +81,22 @@ function Users() {
   }, []);
 
   async function onSubmit(values) {
-    setNotice("");
-    setSubmitError("");
-
     const payload = {
       ...values,
       papel: isAdmin ? values.papel : "colaborador",
     };
+    const toastId = toast.loading(`Enviando convite para ${payload.email}...`);
 
     try {
       await inviteUser(payload);
-      setNotice(`Convite enviado para ${payload.email}. O link é válido por 24 horas.`);
+      toast.success(`Convite enviado para ${payload.email}.`, {
+        id: toastId,
+        description: "O link é válido por 24 horas.",
+      });
       reset({ nomeCompleto: "", email: "", papel: "colaborador" });
       await loadProfiles();
     } catch (error) {
-      setSubmitError(error.message);
+      toast.error(error.message, { id: toastId });
     }
   }
 
@@ -223,17 +223,6 @@ function Users() {
                   Gestor é um colaborador que recebe vínculos de subordinados posteriormente.
                 </p>
               </div>
-
-              {notice && (
-                <div className="rounded-lg bg-chart-5/10 px-3 py-2 text-sm text-chart-5" role="status">
-                  {notice}
-                </div>
-              )}
-              {submitError && (
-                <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
-                  {submitError}
-                </div>
-              )}
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Enviando..." : "Enviar convite"}
