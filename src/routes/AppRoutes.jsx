@@ -37,9 +37,9 @@ function AppRoutes() {
               <Route path="/templates/:templateId/editar" element={<TemplateEditor mode="edit" />} />
               <Route path="/templates/editor" element={<Navigate to="/templates/novo" replace />} />
               <Route path="/ciclos" element={<Ciclos />} />
+              <Route path="/reports" element={<Reports />} />
             </Route>
             <Route path="/feedback" element={<Feedback />} />
-            <Route path="/reports" element={<Reports />} />
             <Route path="/minhas-avaliacoes" element={<MinhasAvaliacoes />} />
             <Route path="/nova-avaliacao" element={<NovaAvaliacao />} />
             
