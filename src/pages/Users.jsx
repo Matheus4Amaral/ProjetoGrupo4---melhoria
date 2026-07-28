@@ -35,6 +35,7 @@ function Users() {
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const {
     register,
     handleSubmit,
@@ -81,6 +82,11 @@ function Users() {
     };
   }, []);
 
+  const filteredProfiles =
+  roleFilter === "all"
+    ? profiles
+    : profiles.filter((member) => member.papel === roleFilter);
+
   async function onSubmit(values) {
     setSubmitError("");
 
@@ -116,7 +122,12 @@ function Users() {
           <CardHeader className="flex flex-row items-start justify-between">
             <div>
               <CardTitle>Diretório de membros</CardTitle>
-              <CardDescription>{profiles.length} perfis cadastrados</CardDescription>
+              
+              <CardDescription>
+              {roleFilter === "all"
+                ? `${profiles.length} perfis cadastrados`
+                : `Exibindo ${filteredProfiles.length} de ${profiles.length} perfis`}
+            </CardDescription>
             </div>
             <Button type="button" variant="outline" size="sm" onClick={loadProfiles} disabled={listLoading}>
               <RefreshCw className={listLoading ? "animate-spin" : ""} />
@@ -129,17 +140,53 @@ function Users() {
                 {listError}
               </div>
             )}
+            
+            <div className="mb-4 flex flex-col gap-1.5 sm:max-w-xs">
+              <Label htmlFor="role-filter">Filtrar por papel</Label>
+
+              <select
+                id="role-filter"
+                value={roleFilter}
+                onChange={(event) => setRoleFilter(event.target.value)}
+                className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <option value="all">Todos</option>
+                <option value="admin">Administrador</option>
+                <option value="rh">RH</option>
+                <option value="colaborador">Colaborador</option>
+              </select>
+            </div>
 
             {listLoading ? (
               <p className="py-10 text-center text-sm text-muted-foreground">Carregando usuários...</p>
-            ) : profiles.length === 0 ? (
+              ) : profiles.length === 0 ? (
               <div className="flex flex-col items-center py-12 text-center">
                 <UserRound className="mb-3 text-muted-foreground/50" size={32} />
-                <p className="text-sm text-muted-foreground">Nenhum perfil encontrado.</p>
+                <p className="text-sm text-muted-foreground">
+                  Nenhum perfil cadastrado.
+                </p>
+              </div>
+            ) : filteredProfiles.length === 0 ? (
+              <div className="flex flex-col items-center py-12 text-center">
+                <UserRound className="mb-3 text-muted-foreground/50" size={32} />
+
+                <p className="text-sm text-muted-foreground">
+                  Nenhum usuário encontrado com esse papel.
+                </p>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => setRoleFilter("all")}
+                >
+                  Limpar filtro
+                </Button>
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {profiles.map((member) => (
+                {filteredProfiles.map((member) => (
                   <div key={member.id} className="flex items-center justify-between gap-4 py-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <Avatar>
