@@ -188,7 +188,7 @@ export default function Ciclos() {
   };
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Ciclos de Avaliação</h1>

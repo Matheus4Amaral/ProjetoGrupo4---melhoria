@@ -1,35 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Diamond, Target, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { getTeamFeedbackBase } from "@/services/resultsService";
+import { useNavigate, useParams } from "react-router-dom";
+import { supabase } from "@/lib/supabaseClient";
 
 // Dados mockados — futuramente virão do Supabase
-const RESUMO_CARDS = {
-  mediaGeral: 4.2,
-  comparacao: "↑ 0.3 vs. ciclo anterior",
-  deficit: { nome: "Comunicação", media: 4.1 },
-  destaque: { iniciais: "RS", nome: "Rafael", nota: 4.6 },
-  atencao: { iniciais: "BT", nome: "Bianca", nota: 3.7 },
+
+const RESUMO_MOCK_RESTANTE = {
+  comparacao: "Comparação com ciclo anterior em breve",
+  deficit: { nome: "Em cálculo", media: "-" },
+  destaque: { iniciais: "--", nome: "Em cálculo", nota: "-" },
+  atencao: { iniciais: "--", nome: "Em cálculo", nota: "-" },
 };
-
-const DESEMPENHO_CRITERIOS = [
-  { id: 1, nome: "Qualidade das Entregas", nota: 3.3 },
-  { id: 2, nome: "Colaboração", nota: 4.2 },
-  { id: 3, nome: "Postura Profissional", nota: 1.1 },
-  { id: 4, nome: "Comunicação", nota: 4.1 },
-];
-
-const MEMBROS_INICIAIS = [
-  { id: 1, iniciais: "JC", nome: "Juliana Costa", cargo: "Designer UX", notas: [3.8, 4.2, 4.5, 3.9], media: 4.1 },
-  { id: 2, iniciais: "RS", nome: "Rafael Souza", cargo: "Product Manager", notas: [4.7, 4.6, 4.4, 4.8], media: 4.6 },
-  { id: 3, iniciais: "CF", nome: "Carlos Ferreira", cargo: "Desenvolvedor Sênior", notas: [4.2, 4.5, 4.0, 4.1], media: 4.2 },
-  { id: 4, iniciais: "ML", nome: "Mariana Lima", cargo: "Analista de Dados", notas: [4.0, 2, 4.3, 4.2], media: 3.6 },
-  { id: 5, iniciais: "BT", nome: "Bianca Torres", cargo: "Desenvolvedora Frontend", notas: [3.4, 3.8, 4.1, 3], media: 3.5 },
-  { id: 6, iniciais: "PA", nome: "Pedro Alves", cargo: "Engenheiro de Software", notas: [4.3, 4.1, 4.6, 4.2], media: 4.3 },
-];
 
 function getNotaVariant(nota) {
   if (nota >= 4) return "text-chart-5";
@@ -38,10 +25,267 @@ function getNotaVariant(nota) {
 }
 
 export default function Feedback() {
-  const [membros, setMembros] = useState(MEMBROS_INICIAIS);
+  const navigate = useNavigate();
+
+  const [cycles, setCycles] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [selectedCycleId, setSelectedCycleId] = useState("");
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const { cycleId, teamId } = useParams();
+  const [resumo, setResumo] = useState({ mediaGeral: null });
+  const [criterios, setCriterios] = useState([]);
+  const [membros, setMembros] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [selectedCycleName, setSelectedCycleName] = useState("");
+  const [selectedTeamName, setSelectedTeamName] = useState("");
+
+  useEffect(() => {
+    if (!cycleId || !teamId) {
+      setSelectedCycleName("");
+      setSelectedTeamName("");
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadHeaderInfo() {
+      try {
+        const [cycleResponse, teamResponse] = await Promise.all([
+          supabase
+            .from("ciclos_avaliacao")
+            .select("nome")
+            .eq("id", cycleId)
+            .maybeSingle(),
+          supabase
+            .from("times")
+            .select("nome")
+            .eq("id", teamId)
+            .maybeSingle(),
+        ]);
+
+        const { data: cycleData, error: cycleError } = cycleResponse;
+        const { data: teamData, error: teamError } = teamResponse;
+
+        if (cycleError) throw cycleError;
+        if (teamError) throw teamError;
+
+        if (!isMounted) return;
+
+        setSelectedCycleName(cycleData?.nome || "");
+        setSelectedTeamName(teamData?.nome || "");
+      } catch (error) {
+        if (!isMounted) return;
+
+        console.error("Erro ao carregar nomes do cabeçalho:", error);
+        setSelectedCycleName("");
+        setSelectedTeamName("");
+      }
+    }
+
+    loadHeaderInfo();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [cycleId, teamId]);
+
+  useEffect(() => {
+    if (cycleId && teamId) return;
+
+    let isMounted = true;
+
+    async function loadOptions() {
+        try {
+          setIsLoading(true);
+          setLoadError("");
+
+          const cyclesResponse = await supabase
+            .from("ciclos_avaliacao")
+            .select("id, nome")
+            .order("nome");
+
+          const teamsResponse = await supabase
+            .from("times")
+            .select("id, nome")
+            .order("nome");
+
+          const { data: cyclesData, error: cyclesError } = cyclesResponse;
+          const { data: teamsData, error: teamsError } = teamsResponse;
+
+          if (cyclesError) {
+            console.error("Erro ao buscar ciclos:", cyclesError);
+            throw cyclesError;
+          }
+
+          if (teamsError) {
+            console.error("Erro ao buscar times:", teamsError);
+            throw teamsError;
+          }
+
+          if (!isMounted) return;
+
+          setCycles(cyclesData || []);
+          setTeams(teamsData || []);
+        } catch (error) {
+          console.error("loadOptions error:", error);
+
+          if (isMounted) {
+            setLoadError(error.message || "Não foi possível carregar ciclos e times.");
+          }
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }
+      }
+
+    loadOptions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [cycleId, teamId]);
+
+
+  useEffect(() => {
+    if (!cycleId || !teamId) {
+      setResumo({ mediaGeral: null });
+      setCriterios([]);
+      setMembros([]);
+      setLoadError("");
+      setIsLoading(false);
+      return;
+    }
+    let isMounted = true;
+
+    async function loadFeedback() {
+      try {
+        setIsLoading(true);
+        setLoadError("");
+
+        const data = await getTeamFeedbackBase(cycleId, teamId);
+
+        if (!isMounted) return;
+
+        setResumo(data?.resumo ?? { mediaGeral: null });
+        setCriterios(Array.isArray(data?.criterios) ? data.criterios : []);
+        setMembros(Array.isArray(data?.membros) ? data.membros : []);
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(error.message || "Não foi possível carregar o feedback.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadFeedback();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [cycleId, teamId]);
 
   function removerMembro(id) {
     setMembros((prev) => prev.filter((m) => m.id !== id));
+  }
+
+  const criterioComMaiorDeficit =
+    criterios.length > 0
+      ? [...criterios].sort((a, b) => Number(a.nota ?? 0) - Number(b.nota ?? 0))[0]
+      : null;
+
+  const membroDestaque =
+    membros.length > 0
+      ? [...membros].sort((a, b) => Number(b.media ?? 0) - Number(a.media ?? 0))[0]
+      : null;
+
+  const membroAtencao =
+    membros.length > 0
+      ? [...membros].sort((a, b) => Number(a.media ?? 0) - Number(b.media ?? 0))[0]
+      : null;
+  
+  const criterioMaisForte =
+    criterios.length > 0
+      ? [...criterios].sort((a, b) => Number(b.nota ?? 0) - Number(a.nota ?? 0))[0]
+      : null;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold text-foreground">Equipe</h1>
+        <p className="text-sm text-muted-foreground">Carregando feedback da equipe...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+        {loadError}
+      </div>
+    );
+  }
+
+  if (!cycleId || !teamId) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Feedbacks</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Selecione um ciclo e um time para visualizar o feedback da equipe.
+          </p>
+        </div>
+
+        <Card>
+          <CardContent className="grid gap-4 p-6 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Ciclo</label>
+              <select
+                value={selectedCycleId}
+                onChange={(e) => setSelectedCycleId(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Selecione um ciclo</option>
+                {cycles.map((cycle) => (
+                  <option key={cycle.id} value={cycle.id}>
+                    {cycle.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Time</label>
+              <select
+                value={selectedTeamId}
+                onChange={(e) => setSelectedTeamId(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Selecione um time</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="md:col-span-2 flex justify-end">
+              <Button
+                onClick={() => navigate(`/feedback/${selectedCycleId}/${selectedTeamId}`)}
+                disabled={!selectedCycleId || !selectedTeamId}
+              >
+                Visualizar feedback
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -50,17 +294,26 @@ export default function Feedback() {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
-            Ciclo Q3 — Julho 2026
+            {selectedCycleName || "Ciclo"}
           </p>
-          <h1 className="text-2xl font-bold text-foreground">Equipe</h1>
+          <h1 className="text-2xl font-bold text-foreground">{selectedTeamName || "Equipe"}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {membros.length} colaboradores cadastrados
           </p>
         </div>
-        <Button>
-          <Plus size={16} />
-          Adicionar Colaborador
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate("/feedback")}
+          >
+            Trocar ciclo e time
+          </Button>
+          <Button>
+            <Plus size={16} />
+            Adicionar Colaborador
+          </Button>
+        </div>
       </div>
 
       {/* Cards de Resumo */}
@@ -70,8 +323,8 @@ export default function Feedback() {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
               Média Geral
             </p>
-            <p className="text-4xl font-bold text-primary">{RESUMO_CARDS.mediaGeral}</p>
-            <p className="text-xs text-muted-foreground mt-1">{RESUMO_CARDS.comparacao}</p>
+            <p className="text-4xl font-bold text-primary">{resumo.mediaGeral ?? "-"}</p>
+            <p className="text-xs text-muted-foreground mt-1">{RESUMO_MOCK_RESTANTE.comparacao}</p>
           </CardContent>
         </Card>
 
@@ -80,8 +333,8 @@ export default function Feedback() {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
               Déficit da Equipe
             </p>
-            <p className="text-xl font-semibold text-destructive">{RESUMO_CARDS.deficit.nome}</p>
-            <p className="text-xs text-muted-foreground mt-1">média {RESUMO_CARDS.deficit.media}</p>
+            <p className="text-xl font-semibold text-destructive">{criterioComMaiorDeficit?.nome ?? "Em cálculo"}</p>
+            <p className="text-xs text-muted-foreground mt-1">média {criterioComMaiorDeficit?.nota ?? "-"}</p>
           </CardContent>
         </Card>
 
@@ -93,12 +346,12 @@ export default function Feedback() {
             <div className="flex items-center gap-2 mb-3">
               <Avatar className="w-7 h-7">
                 <AvatarFallback className="text-xs bg-chart-5/20 text-chart-5">
-                  {RESUMO_CARDS.destaque.iniciais}
+                  {membroDestaque?.iniciais ?? "--"}
                 </AvatarFallback>
               </Avatar>
-              <p className="text-sm font-medium text-foreground">{RESUMO_CARDS.destaque.nome}</p>
+              <p className="text-sm font-medium text-foreground">{membroDestaque?.nome ?? "Em cálculo"}</p>
             </div>
-            <p className="text-4xl font-bold text-chart-5">{RESUMO_CARDS.destaque.nota}</p>
+            <p className="text-4xl font-bold text-chart-5">{membroDestaque?.media ?? "-"}</p>
           </CardContent>
         </Card>
 
@@ -110,12 +363,12 @@ export default function Feedback() {
             <div className="flex items-center gap-2 mb-3">
               <Avatar className="w-7 h-7">
                 <AvatarFallback className="text-xs bg-chart-4/20 text-chart-4">
-                  {RESUMO_CARDS.atencao.iniciais}
+                  {membroAtencao?.iniciais ?? "--"}
                 </AvatarFallback>
               </Avatar>
-              <p className="text-sm font-medium text-foreground">{RESUMO_CARDS.atencao.nome}</p>
+              <p className="text-sm font-medium text-foreground">{membroAtencao?.nome ?? "Em cálculo"}</p>
             </div>
-            <p className="text-4xl font-bold text-chart-4">{RESUMO_CARDS.atencao.nota}</p>
+            <p className="text-4xl font-bold text-chart-4">{membroAtencao?.media ?? "-"}</p>
           </CardContent>
         </Card>
       </div>
@@ -128,7 +381,7 @@ export default function Feedback() {
             <CardTitle className="text-base">Desempenho por Critério</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
-            {DESEMPENHO_CRITERIOS.map((criterio) => {
+            {criterios.map((criterio) => {
               const progresso = (criterio.nota / 5) * 100;
               return (
                 <div key={criterio.id}>
@@ -166,9 +419,9 @@ export default function Feedback() {
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <Diamond className="w-4 h-4 text-chart-4" />
-                  <h3 className="text-sm font-bold text-foreground">Comunicação</h3>
+                  <h3 className="text-sm font-bold text-foreground">{criterioComMaiorDeficit?.nome ?? "Em cálculo"}</h3>
                 </div>
-                <span className="text-sm font-bold text-chart-4">4.1</span>
+                <span className="text-sm font-bold text-chart-4">{criterioComMaiorDeficit?.nota ?? "-"}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 Recomenda-se sessões de feedback individual e workshops focados nesta competência.
@@ -184,9 +437,9 @@ export default function Feedback() {
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-bold text-foreground">Qualidade das Entregas</h3>
+                  <h3 className="text-sm font-bold text-foreground">{criterioMaisForte?.nome ?? "Em cálculo"}</h3>
                 </div>
-                <span className="text-sm font-bold text-primary">4.3</span>
+                <span className="text-sm font-bold text-primary">{criterioMaisForte?.nota ?? "-"}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 Utilize esses colaboradores como referência em mentorias internas.
@@ -225,7 +478,7 @@ export default function Feedback() {
               {/* Direita: micro-notas + média + remover */}
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3">
-                  {membro.notas.map((nota, i) => (
+                  {(membro.notas || []).map((nota, i) => (
                     <div key={i} className="flex flex-col items-center gap-0.5">
                       <Diamond className="w-2.5 h-2.5 text-muted-foreground/40" />
                       <span className={cn("text-xs font-medium", getNotaVariant(nota))}>{nota}</span>

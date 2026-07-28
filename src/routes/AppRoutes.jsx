@@ -39,6 +39,7 @@ function AppRoutes() {
               <Route path="/ciclos" element={<Ciclos />} />
             </Route>
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/feedback/:cycleId/:teamId" element={<Feedback />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/minhas-avaliacoes" element={<MinhasAvaliacoes />} />
             <Route path="/nova-avaliacao" element={<NovaAvaliacao />} />
