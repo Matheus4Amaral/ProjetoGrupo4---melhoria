@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 const COLOR_MAP = {
@@ -15,57 +16,59 @@ function StatCard({
   description,
   color = "blue",
   onClick,
-   actionLabel = "Ver detalhes",
+  actionLabel = "Ver detalhes",
+  loading = false,
 }) {
-  const isClickable = typeof onClick === "function";
+  const isClickable = typeof onClick === "function" && !loading;
 
-  function handleKeyDown(event) {
-    if (!isClickable) return;
+  const body = (
+    <CardContent className="p-6">
+      <div
+        className={cn(
+          "mb-4 flex h-12 w-12 items-center justify-center rounded-xl",
+          COLOR_MAP[color]
+        )}
+      >
+        {icon}
+      </div>
 
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      onClick();
-    }
+      {loading ? (
+        <>
+          <Skeleton className="h-9 w-16" />
+          <Skeleton className="mt-2 h-4 w-28" />
+          <Skeleton className="mt-2 h-3 w-36" />
+        </>
+      ) : (
+        <>
+          <p className="text-3xl font-bold text-foreground">{value}</p>
+          <p className="mt-1 text-sm font-semibold text-foreground">{title}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+        </>
+      )}
+
+      {isClickable && (
+        <p className="mt-4 text-sm font-medium text-primary">{actionLabel} →</p>
+      )}
+    </CardContent>
+  );
+
+  if (!isClickable) {
+    return (
+      <Card aria-busy={loading || undefined}>
+        {body}
+      </Card>
+    );
   }
 
   return (
-    <Card
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
-      role={isClickable ? "button" : undefined}
-      tabIndex={isClickable ? 0 : undefined}
-      className={cn(
-        "transition-all hover:shadow-md",
-        isClickable &&
-          "cursor-pointer hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-      )}
-    >
-      <CardContent className="p-6">
-        <div
-          className={cn(
-            "mb-4 flex h-12 w-12 items-center justify-center rounded-xl",
-            COLOR_MAP[color]
-          )}
-        >
-          {icon}
-        </div>
-
-        <p className="text-3xl font-bold text-foreground">{value}</p>
-
-        <p className="mt-1 text-sm font-semibold text-foreground">
-          {title}
-        </p>
-
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {description}
-        </p>
-
-        {isClickable && (
-          <p className="mt-4 text-sm font-medium text-primary">
-            {actionLabel} →
-          </p>
-        )}
-      </CardContent>
+    <Card className="transition-all hover:-translate-y-1 hover:shadow-md focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full cursor-pointer text-left focus-visible:outline-none"
+      >
+        {body}
+      </button>
     </Card>
   );
 }

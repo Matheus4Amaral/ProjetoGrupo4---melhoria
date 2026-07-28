@@ -1,9 +1,16 @@
+import ComingSoon from "@/components/ComingSoon";
+
 function Reports() {
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-foreground">Relatórios</h1>
-      <p className="text-sm text-muted-foreground">Em construção.</p>
-    </div>
+    <ComingSoon
+      title="Relatórios"
+      description="Visões consolidadas por time e organização."
+      plannedItems={[
+        "Comparativo de competências por time",
+        "Evolução dos resultados entre ciclos",
+        "Exportação dos dados agregados",
+      ]}
+    />
   );
 }
 

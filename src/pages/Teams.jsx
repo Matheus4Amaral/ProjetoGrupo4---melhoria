@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { notifySuccess } from "@/lib/notify";
 import { teamSchema } from "@/lib/validationSchemas";
 import {
   addTeamMember,
@@ -282,7 +283,6 @@ function Teams() {
   const [modal, setModal] = useState(CLOSED_MODAL);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [notice, setNotice] = useState("");
   const [modalError, setModalError] = useState("");
   const [busyAction, setBusyAction] = useState("");
 
@@ -326,7 +326,6 @@ function Teams() {
   );
 
   function openModal(type, teamId = null) {
-    setNotice("");
     setModalError("");
     setBusyAction("");
     setModal({ type, teamId });
@@ -344,7 +343,7 @@ function Teams() {
     try {
       const created = await createTeam(values);
       setModal(CLOSED_MODAL);
-      setNotice(`Time “${created.nome}” criado com sucesso.`);
+      notifySuccess(`Time “${created.nome}” criado com sucesso.`);
       await loadStructure({ showLoading: false });
     } finally {
       setBusyAction("");
@@ -376,7 +375,7 @@ function Teams() {
       }
 
       setModal(CLOSED_MODAL);
-      setNotice(`Alterações de “${updated.nome}” salvas.`);
+      notifySuccess(`Alterações de “${updated.nome}” salvas.`);
       await loadStructure({ showLoading: false });
     } finally {
       setBusyAction("");
@@ -392,7 +391,7 @@ function Teams() {
       const name = modalTeam.nome;
       await deleteTeam(modalTeam.id);
       setModal(CLOSED_MODAL);
-      setNotice(`Time “${name}” excluído com sucesso.`);
+      notifySuccess(`Time “${name}” excluído com sucesso.`);
       await loadStructure({ showLoading: false });
     } catch (error) {
       setModalError(error.message);
@@ -421,10 +420,6 @@ function Teams() {
           </Button>
         </div>
       </div>
-
-      {notice && (
-        <div className="rounded-lg bg-chart-5/10 px-3 py-2 text-sm text-chart-5" role="status">{notice}</div>
-      )}
 
       {loadError ? (
         <Card>

@@ -1,10 +1,8 @@
 import { useNavigate } from "react-router-dom"
 import {
-  BarChart3Icon,
   ClipboardListIcon,
   FileEditIcon,
   LayoutDashboardIcon,
-  MessageSquareIcon,
   NetworkIcon,
   UsersIcon,
   FileTextIcon,
@@ -29,8 +27,6 @@ const MANAGEMENT_LINKS = [
   { title: "Ciclos", url: "/ciclos", icon: RefreshCcwIcon },
   { title: "Usuários", url: "/users", icon: UsersIcon },
   { title: "Times", url: "/teams", icon: NetworkIcon },
-  { title: "Feedbacks", url: "/feedback", icon: MessageSquareIcon },
-  { title: "Relatórios", url: "/reports", icon: BarChart3Icon },
 ]
 
 const COLLABORATOR_LINKS = [

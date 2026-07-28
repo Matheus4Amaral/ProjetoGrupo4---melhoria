@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { notifySuccess } from "@/lib/notify";
 import { competencyTemplateSchema } from "@/lib/validationSchemas";
 import {
   createTemplate,
@@ -126,14 +127,12 @@ export default function TemplateEditor({ mode }) {
         await createTemplate(values);
       }
 
-      navigate("/templates", {
-        replace: true,
-        state: {
-          feedback: mode === "edit"
-            ? "Template atualizado com sucesso."
-            : "Template criado com sucesso.",
-        },
-      });
+      notifySuccess(
+        mode === "edit"
+          ? `Template “${values.nome}” atualizado com sucesso.`
+          : `Template “${values.nome}” criado com sucesso.`,
+      );
+      navigate("/templates", { replace: true });
     } catch (error) {
       setSaveError(error.message);
     }

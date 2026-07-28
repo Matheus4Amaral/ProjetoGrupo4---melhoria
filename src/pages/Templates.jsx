@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Copy, FileText, Pencil, Plus, RefreshCw, Settings, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { notifySuccess } from "@/lib/notify";
 import { deleteTemplate, listTemplates } from "@/services/templatesService";
 
 function pluralize(count, singular, plural) {
@@ -39,11 +40,9 @@ function TemplateListSkeleton() {
 
 export default function Templates() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [templates, setTemplates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [feedback, setFeedback] = useState(location.state?.feedback || "");
   const [deleteError, setDeleteError] = useState("");
   const [templateToDelete, setTemplateToDelete] = useState(null);
   const [templateInDetails, setTemplateInDetails] = useState(null);
@@ -82,12 +81,6 @@ export default function Templates() {
     };
   }, []);
 
-  useEffect(() => {
-    if (location.state?.feedback) {
-      navigate(location.pathname, { replace: true, state: null });
-    }
-  }, [location.pathname, location.state, navigate]);
-
   const openDeleteDialog = (template) => {
     setDeleteError("");
     setTemplateToDelete(template);
@@ -107,9 +100,10 @@ export default function Templates() {
     setDeleteError("");
 
     try {
+      const deletedName = templateToDelete.nome;
       await deleteTemplate(templateToDelete.id);
       setTemplateToDelete(null);
-      setFeedback("Template excluído com sucesso.");
+      notifySuccess(`Template “${deletedName}” excluído com sucesso.`);
       await loadTemplates();
     } catch (error) {
       setDeleteError(error.message);
@@ -131,13 +125,6 @@ export default function Templates() {
           <Plus size={16} /> Novo template
         </Button>
       </div>
-
-      <div className="sr-only" aria-live="polite">{feedback}</div>
-      {feedback && (
-        <div className="rounded-lg border border-primary/25 bg-primary/5 p-3 text-sm text-foreground" role="status">
-          {feedback}
-        </div>
-      )}
 
       {isLoading ? (
         <TemplateListSkeleton />

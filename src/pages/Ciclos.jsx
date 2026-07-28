@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LockKeyhole, Plus, RefreshCcw, Settings } from "lucide-react";
+import { notifySuccess } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,6 +55,37 @@ function CycleProgress({ cycle, compact = false }) {
   );
 }
 
+function CycleActions({ cycle, onConfigure, onShowDetails, onRequestClose }) {
+  return (
+    <>
+      {cycle.status === "aberto" && (
+        <Button variant="outline" size="sm" className="gap-1" onClick={() => onRequestClose(cycle)}>
+          <LockKeyhole size={14} /> Encerrar
+        </Button>
+      )}
+      <Button
+        variant="link"
+        size="sm"
+        className="h-auto p-0 text-primary"
+        onClick={cycle.status === "rascunho"
+          ? () => onConfigure(cycle)
+          : () => onShowDetails(cycle)}
+      >
+        {cycle.status === "rascunho" ? "Configurar" : "Ver detalhes"}
+      </Button>
+    </>
+  );
+}
+
+function DetailRow({ label, children }) {
+  return (
+    <div className="grid gap-1 py-3 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4">
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dd className="text-sm text-foreground">{children}</dd>
+    </div>
+  );
+}
+
 export default function Ciclos() {
   const [cycles, setCycles] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -72,6 +104,7 @@ export default function Ciclos() {
   const [cycleToClose, setCycleToClose] = useState(null);
   const [closing, setClosing] = useState(false);
   const [closeError, setCloseError] = useState("");
+  const [cycleInDetails, setCycleInDetails] = useState(null);
 
   const refreshCycles = useCallback(async () => {
     const data = await listCycles();
@@ -138,6 +171,11 @@ export default function Ciclos() {
       await refreshCycles();
       setModalOpen(false);
       setSelectedCycle(null);
+      notifySuccess(
+        cycleId
+          ? `Alterações de “${values.nome}” salvas.`
+          : `Ciclo “${values.nome}” criado como rascunho.`,
+      );
     } catch (error) {
       setSaveError(error.message);
     } finally {
@@ -151,6 +189,11 @@ export default function Ciclos() {
     setCycleToGenerate(cycle);
   };
 
+  const requestClose = (cycle) => {
+    setCloseError("");
+    setCycleToClose(cycle);
+  };
+
   const closeGenerationDialog = () => {
     if (generating) return;
     setCycleToGenerate(null);
@@ -159,12 +202,20 @@ export default function Ciclos() {
 
   const handleGenerate = async () => {
     if (!cycleToGenerate || generating) return;
+    const cycleName = cycleToGenerate.nome;
     setGenerating(true);
     setGenerationError("");
     try {
       await generateCycleAssignments(cycleToGenerate.id);
-      await refreshCycles();
+      const updated = await refreshCycles();
       setCycleToGenerate(null);
+
+      const generated = updated.find((cycle) => cycle.id === cycleToGenerate.id);
+      notifySuccess(
+        generated?.totalAtribuicoes
+          ? `Ciclo “${cycleName}” aberto com ${generated.totalAtribuicoes} avaliações geradas.`
+          : `Ciclo “${cycleName}” aberto.`,
+      );
     } catch (error) {
       setGenerationError(error.message);
     } finally {
@@ -174,12 +225,14 @@ export default function Ciclos() {
 
   const handleCloseCycle = async () => {
     if (!cycleToClose || closing) return;
+    const cycleName = cycleToClose.nome;
     setClosing(true);
     setCloseError("");
     try {
       await closeCycle(cycleToClose.id);
       await refreshCycles();
       setCycleToClose(null);
+      notifySuccess(`Ciclo “${cycleName}” encerrado. Os resultados já estão disponíveis.`);
     } catch (error) {
       setCloseError(error.message);
     } finally {
@@ -258,20 +311,13 @@ export default function Ciclos() {
                     {cycle.template} · {cycle.times.length} {cycle.times.length === 1 ? "time" : "times"}
                   </p>
                   <CycleProgress cycle={cycle} compact />
-                  <div className="flex justify-end gap-2 pt-2">
-                    {cycle.status === "aberto" && (
-                      <Button variant="outline" size="sm" className="gap-1" onClick={() => { setCloseError(""); setCycleToClose(cycle); }}>
-                        <LockKeyhole size={14} /> Encerrar
-                      </Button>
-                    )}
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0 text-primary"
-                      onClick={cycle.status === "rascunho" ? () => openCycleConfiguration(cycle) : undefined}
-                    >
-                      {cycle.status === "rascunho" ? "Configurar" : cycle.status === "aberto" ? "Ver progresso" : "Ver resultados"}
-                    </Button>
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <CycleActions
+                      cycle={cycle}
+                      onConfigure={openCycleConfiguration}
+                      onShowDetails={setCycleInDetails}
+                      onRequestClose={requestClose}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -304,20 +350,15 @@ export default function Ciclos() {
                     <TableCell className="text-muted-foreground">{cycle.periodo}</TableCell>
                     <TableCell><CycleStatus status={cycle.status} /></TableCell>
                     <TableCell><CycleProgress cycle={cycle} /></TableCell>
-                    <TableCell className="space-x-2 text-right">
-                      {cycle.status === "aberto" && (
-                        <Button variant="outline" size="sm" className="gap-1" onClick={() => { setCloseError(""); setCycleToClose(cycle); }}>
-                          <LockKeyhole size={14} /> Encerrar
-                        </Button>
-                      )}
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-primary"
-                        onClick={cycle.status === "rascunho" ? () => openCycleConfiguration(cycle) : undefined}
-                      >
-                        {cycle.status === "rascunho" ? "Configurar" : cycle.status === "aberto" ? "Ver progresso" : "Ver resultados"}
-                      </Button>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-3">
+                        <CycleActions
+                          cycle={cycle}
+                          onConfigure={openCycleConfiguration}
+                          onShowDetails={setCycleInDetails}
+                          onRequestClose={requestClose}
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -369,6 +410,50 @@ export default function Ciclos() {
             <Button disabled={generating} onClick={handleGenerate}>
               {generating ? "Gerando avaliações..." : "Confirmar e abrir ciclo"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(cycleInDetails)} onOpenChange={(open) => !open && setCycleInDetails(null)}>
+        <DialogContent className="sm:max-w-lg" onClose={() => setCycleInDetails(null)}>
+          <DialogHeader>
+            <DialogTitle>{cycleInDetails?.nome}</DialogTitle>
+            <DialogDescription>
+              {cycleInDetails?.status === "aberto"
+                ? "Ciclo em andamento. O progresso é agregado e não identifica quem avaliou quem."
+                : "Ciclo encerrado. Os resultados já foram liberados aos participantes."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {cycleInDetails && (
+            <dl className="divide-y divide-border">
+              <DetailRow label="Status">
+                <CycleStatus status={cycleInDetails.status} />
+              </DetailRow>
+              <DetailRow label="Template">{cycleInDetails.template}</DetailRow>
+              <DetailRow label="Período">{cycleInDetails.periodo}</DetailRow>
+              <DetailRow label="Times">
+                {cycleInDetails.times.length === 0
+                  ? "—"
+                  : cycleInDetails.times.map((team) => team.nome).join(", ")}
+              </DetailRow>
+              <DetailRow label="Progresso">
+                {cycleInDetails.progresso === null ? (
+                  "Nenhuma avaliação gerada."
+                ) : (
+                  <div className="space-y-2">
+                    <CycleProgress cycle={cycleInDetails} compact />
+                    <p className="text-muted-foreground">
+                      {cycleInDetails.atribuicoesConcluidas} de {cycleInDetails.totalAtribuicoes} avaliações concluídas
+                    </p>
+                  </div>
+                )}
+              </DetailRow>
+            </dl>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCycleInDetails(null)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
