@@ -6,9 +6,9 @@ import App from "./App.jsx";
 
 import { ThemeProvider } from "./context/ThemeProvider";
 import { AuthProvider } from "./context/AuthProvider";
-import { ToastProvider } from "./context/ToastContainer";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 
 
 createRoot(document.getElementById("root")).render(
@@ -17,15 +17,12 @@ createRoot(document.getElementById("root")).render(
 
       <AuthProvider>
 
-        <ToastProvider>
+        <TooltipProvider>
 
-          <TooltipProvider>
+          <App />
+          <Toaster />
 
-            <App />
-
-          </TooltipProvider>
-
-        </ToastProvider>
+        </TooltipProvider>
 
       </AuthProvider>
 

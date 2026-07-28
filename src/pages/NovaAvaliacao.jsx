@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { useToast } from "@/context/ToastContainer";
+import { toast } from "sonner";
 
 
 const NOTES = [1, 2, 3, 4, 5];
@@ -29,8 +29,6 @@ function formatDeadline(value) {
 export default function NovaAvaliacao() {
 
   const [confirmFinalizeOpen, setConfirmFinalizeOpen] = useState(false);
-  const toast = useToast();
-
 
   const [cycles, setCycles] = useState([]);
   const [assignment, setAssignment] = useState(null);
