@@ -1,8 +1,10 @@
 import { Users, MessageSquare, Star, ClipboardList } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import StatCard from "@/components/dashboard/StatCard";
 import FeedbackChart from "@/components/dashboard/FeedbackChart";
 
 function Dashboard() {
+   const navigate = useNavigate();
   return (
     <div className="space-y-8">
       <div>
@@ -19,6 +21,8 @@ function Dashboard() {
           value="18"
           description="Usuários cadastrados"
           color="blue"
+         actionLabel="Ver usuários"
+         onClick={() => navigate("/users")}
         />
         <StatCard
           icon={<MessageSquare size={22} />}
@@ -26,20 +30,28 @@ function Dashboard() {
           value="56"
           description="Avaliações realizadas"
           color="green"
+          actionLabel="Ver avaliações"
+          onClick={() => navigate("/feedback")}
         />
+
         <StatCard
           icon={<Star size={22} />}
           title="Média Geral"
           value="4.8"
           description="De 5 pontos"
           color="yellow"
+          actionLabel="Ver relatório"
+          onClick={() => navigate("/reports")}
         />
+
         <StatCard
           icon={<ClipboardList size={22} />}
           title="Pendentes"
           value="12"
           description="Aguardando resposta"
           color="red"
+          actionLabel="Ver feedback"
+          onClick={() => navigate("/feedback")}
         />
       </div>
 
