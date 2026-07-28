@@ -14,8 +14,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 const ROUTE_LABELS = {
   "/dashboard": "Dashboard",
   "/users": "Usuários",
-  "/feedback": "Feedbacks",
-  "/reports": "Relatórios",
   "/nova-avaliacao": "Nova avaliação",
   "/minhas-avaliacoes": "Meus resultados",
 }

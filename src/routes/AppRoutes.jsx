@@ -5,8 +5,6 @@ import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Users from "@/pages/Users";
 import Teams from "@/pages/Teams";
-import Feedback from "@/pages/Feedback";
-import Reports from "@/pages/Reports";
 import NotFound from "@/pages/NotFound";
 import NovaAvaliacao from "@/pages/NovaAvaliacao";
 import MinhasAvaliacoes from "@/pages/MinhasAvaliacoes";
@@ -38,8 +36,6 @@ function AppRoutes() {
               <Route path="/templates/editor" element={<Navigate to="/templates/novo" replace />} />
               <Route path="/ciclos" element={<Ciclos />} />
             </Route>
-            <Route path="/feedback" element={<Feedback />} />
-            <Route path="/reports" element={<Reports />} />
             <Route path="/minhas-avaliacoes" element={<MinhasAvaliacoes />} />
             <Route path="/nova-avaliacao" element={<NovaAvaliacao />} />
             

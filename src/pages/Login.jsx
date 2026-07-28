@@ -5,18 +5,18 @@ import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { loginSchema } from "@/lib/validationSchemas";
 
 function Login() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const { login, session, profile, loading, error: authError } = useAuth();
   const [submitError, setSubmitError] = useState("");
   const {
@@ -53,9 +53,12 @@ function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-primary">Feedback 360°</CardTitle>
-          <CardDescription>Gestão de avaliações e desenvolvimento</CardDescription>
+        <CardHeader className="flex flex-col items-center text-center">
+          <img
+            src={theme === "dark" ? "/logo-avalia-ai-dark.svg" : "/logo-avalia-ai-light.svg"}
+            alt="Avalia.ai — Feedback 360°"
+            className="mx-auto block h-auto w-[200px] max-w-full"
+          />
         </CardHeader>
 
         <CardContent>
