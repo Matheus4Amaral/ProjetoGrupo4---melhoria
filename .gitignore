@@ -1,4 +1,25 @@
+# ==============================================================================
+# Dependências e Builds
+# ==============================================================================
+# Ignora node_modules em qualquer pasta do projeto (raiz, frontend ou backend)
+node_modules/
+dist/
+dist-ssr/
+build/
+
+# ==============================================================================
+# Variáveis de Ambiente e Segredos (MUITO IMPORTANTE PARA O BACKEND)
+# ==============================================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# ==============================================================================
 # Logs
+# ==============================================================================
 logs
 *.log
 npm-debug.log*
@@ -7,18 +28,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
+# ==============================================================================
+# IDEs, Editores e Sistema Operacional
+# ==============================================================================
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
