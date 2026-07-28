@@ -58,8 +58,21 @@ export default function CicloModal({
     if (!saving) onOpenChange(nextOpen);
   };
 
-  const handleSubmit = form.handleSubmit((values) => onSave(values, cycle?.id || null));
-  const hasUnsavedChanges = form.formState.isDirty;
+//------------------------------------------------------------------------------------------
+
+// Submit padrão: salva o ciclo (edição usa cycle.id, criação usa null)
+const handleSubmit = form.handleSubmit((values) => onSave(values, cycle?.id || null));
+
+// Submit do botão "Criar e gerar avaliações": salva como novo ciclo (null)
+// e avisa o onSave para gerar as avaliações logo em seguida
+const handleCreateAndGenerate = form.handleSubmit((values) =>
+  onSave(values, null, { generateAfter: true }),
+);
+
+// true se o usuário alterou algo no formulário desde o último reset/save
+const hasUnsavedChanges = form.formState.isDirty;
+
+//--------------------------------------------------------------------------------------------
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -193,7 +206,7 @@ export default function CicloModal({
 
         <DialogFooter className="sm:justify-between">
           <div>
-            {cycle && (
+            {cycle ? (
               <Button
                 type="button"
                 variant="outline"
@@ -203,7 +216,20 @@ export default function CicloModal({
               >
                 Gerar avaliações
               </Button>
+            ) : (
+              // Novo: aparece quando é ciclo novo (cycle === null)
+              <Button
+                type="button"
+                variant="outline"
+                disabled={saving || loadingOptions || teams.length === 0}
+                onClick={handleCreateAndGenerate}
+              >
+                Criar Ciclo e Gerar Avaliações
+              </Button>
             )}
+
+            {/* cyclo (gera avaliacoes ou cria e gera avaliacoes) */}
+          
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" disabled={saving} onClick={() => handleOpenChange(false)}>
