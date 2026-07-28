@@ -1,15 +1,50 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/lib/supabaseClient";
+import { useEffect, useState } from "react";
 
-const data = [
-  { mes: "Jan", feedbacks: 20 },
-  { mes: "Fev", feedbacks: 35 },
-  { mes: "Mar", feedbacks: 42 },
-  { mes: "Abr", feedbacks: 56 },
-  { mes: "Mai", feedbacks: 68 },
-];
+
+// const data = [
+//   { mes: "Jan", feedbacks: 20 },
+//   { mes: "Fev", feedbacks: 35 },
+//   { mes: "Mar", feedbacks: 42 },
+//   { mes: "Abr", feedbacks: 56 },
+//   { mes: "Mai", feedbacks: 68 },
+// ];
 
 function FeedbackChart() {
+
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+
+    async function buscar() {
+
+      const { data, error } = await supabase
+        .rpc("feedbacks_por_mes");
+
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+
+      setData(
+        data.map(item => ({
+          mes: item.mes,
+          feedbacks: Number(item.total)
+        }))
+      );
+
+    }
+
+
+    buscar();
+
+  }, []);
+
+
   return (
     <Card>
       <CardHeader>

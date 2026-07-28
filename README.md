@@ -62,6 +62,7 @@ npm install
 
 ```bash
 npm run dev
+
 ```
 
 O terminal mostrará o endereço local da aplicação, normalmente:
