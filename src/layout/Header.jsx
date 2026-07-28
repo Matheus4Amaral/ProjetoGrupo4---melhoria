@@ -1,3 +1,4 @@
+import { Fragment } from "react"
 import { Link, useLocation } from "react-router-dom"
 
 import {
@@ -14,14 +15,53 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 const ROUTE_LABELS = {
   "/dashboard": "Dashboard",
   "/users": "Usuários",
+  "/teams": "Times",
+  "/templates": "Templates",
+  "/ciclos": "Ciclos",
   "/nova-avaliacao": "Nova avaliação",
   "/minhas-avaliacoes": "Meus resultados",
+}
+
+function getBreadcrumbItems(pathname) {
+  if (pathname === "/templates/novo") {
+    return [
+      { label: "Templates", to: "/templates" },
+      { label: "Novo template" },
+    ]
+  }
+
+  if (/^\/templates\/[^/]+\/editar$/.test(pathname)) {
+    return [
+      { label: "Templates", to: "/templates" },
+      { label: "Editar template" },
+    ]
+  }
+
+  if (/^\/templates\/[^/]+\/clonar$/.test(pathname)) {
+    return [
+      { label: "Templates", to: "/templates" },
+      { label: "Clonar template" },
+    ]
+  }
+
+  const fallbackLabel = pathname
+    .split("/")
+    .filter(Boolean)
+    .at(-1)
+    ?.replaceAll("-", " ")
+
+  return [{
+    label: ROUTE_LABELS[pathname]
+      || (fallbackLabel
+        ? fallbackLabel.charAt(0).toUpperCase() + fallbackLabel.slice(1)
+        : "Dashboard"),
+  }]
 }
 
 function Header() {
   const { pathname } = useLocation()
   const normalizedPath = pathname.toLowerCase()
-  const pageTitle = ROUTE_LABELS[normalizedPath] || "Página atual"
+  const breadcrumbItems = getBreadcrumbItems(normalizedPath)
   const showBreadcrumb = normalizedPath !== "/dashboard"
 
   return (
@@ -41,12 +81,26 @@ function Header() {
                     Página Inicial
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="truncate font-medium">
-                    {pageTitle}
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
+                {breadcrumbItems.map((item, index) => {
+                  const isCurrentPage = index === breadcrumbItems.length - 1
+
+                  return (
+                    <Fragment key={item.to || item.label}>
+                      <BreadcrumbSeparator className="hidden md:block" />
+                      <BreadcrumbItem className={isCurrentPage ? "min-w-0" : "hidden md:block"}>
+                        {isCurrentPage ? (
+                          <BreadcrumbPage className="truncate font-medium">
+                            {item.label}
+                          </BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink render={<Link to={item.to} />}>
+                            {item.label}
+                          </BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                    </Fragment>
+                  )
+                })}
               </BreadcrumbList>
             </Breadcrumb>
           </>
