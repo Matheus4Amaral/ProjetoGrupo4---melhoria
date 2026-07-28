@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import CicloModal from "@/components/CicloModal";
 import {
-  generateCycleAssignments,
+  generateCycleAssignments, //generateAfter veio importado do generateCycleAssignments que antes so era usado no handleGenerate 
   closeCycle,
   listCycleOptions,
   listCycles,
@@ -130,20 +130,27 @@ export default function Ciclos() {
     setModalOpen(true);
   };
 
-  const handleSave = async (values, cycleId) => {
-    setSaving(true);
-    setSaveError("");
-    try {
-      await saveCycle(values, cycleId);
-      await refreshCycles();
-      setModalOpen(false);
-      setSelectedCycle(null);
-    } catch (error) {
-      setSaveError(error.message);
-    } finally {
-      setSaving(false);
+  const handleSave = async (values, cycleId, options = {}) => {
+  setSaving(true);
+  setSaveError("");
+  try {
+    // salva o ciclo e guarda o retorno (tem o id do ciclo)
+    const savedCycle = await saveCycle(values, cycleId);
+
+    // se o botão clicado foi "Criar e gerar avaliações", gera agora
+    if (options.generateAfter) {
+      await generateCycleAssignments(savedCycle.id);
     }
-  };
+
+    await refreshCycles();
+    setModalOpen(false);
+    setSelectedCycle(null);
+  } catch (error) {
+    setSaveError(error.message);
+  } finally {
+    setSaving(false);
+  }
+};
 
   const requestGeneration = (cycle) => {
     setModalOpen(false);
@@ -240,6 +247,7 @@ export default function Ciclos() {
           ) : (
             <Button onClick={openNewCycle}>Criar ciclo</Button>
           )}
+          
         </div>
       ) : (
         <>
