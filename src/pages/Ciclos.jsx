@@ -30,7 +30,7 @@ const STATUS_CONFIG = {
 function CycleStatus({ status }) {
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.rascunho;
   return (
-    <span className={`flex items-center gap-1.5 text-sm font-medium ${config.text}`}>
+    <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${config.text}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} aria-hidden="true" />
       {config.label}
     </span>
@@ -43,13 +43,13 @@ function CycleProgress({ cycle, compact = false }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 max-w-[160px]">
       <Progress
         value={cycle.progresso}
-        className={compact ? "h-1.5 flex-1" : "h-1.5 w-24"}
+        className={compact ? "h-1.5 flex-1" : "h-1.5 flex-1"}
         aria-label={`${cycle.atribuicoesConcluidas} de ${cycle.totalAtribuicoes} avaliações concluídas`}
       />
-      <span className="w-9 text-right text-xs text-muted-foreground">{cycle.progresso}%</span>
+      <span className="w-9 text-right text-xs text-muted-foreground shrink-0">{cycle.progresso}%</span>
     </div>
   );
 }
@@ -188,7 +188,8 @@ export default function Ciclos() {
   };
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="w-full space-y-6">
+      {/* Cabeçalho */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Ciclos de Avaliação</h1>
@@ -196,11 +197,12 @@ export default function Ciclos() {
             Configure o período e os times, gere as atribuições e acompanhe o progresso.
           </p>
         </div>
-        <Button onClick={openNewCycle} className="gap-2" disabled={loading || Boolean(loadError)}>
+        <Button onClick={openNewCycle} className="gap-2 shrink-0" disabled={loading || Boolean(loadError)}>
           <Plus size={16} /> Novo ciclo
         </Button>
       </div>
 
+      {/* Filtros Tab */}
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 sm:pb-0">
         {["todos", "rascunho", "aberto", "encerrado"].map((tab) => (
           <Button
@@ -214,6 +216,7 @@ export default function Ciclos() {
         ))}
       </div>
 
+      {/* Conteúdo Principal */}
       {loading ? (
         <div className="rounded-lg border border-border p-8 text-center text-sm text-muted-foreground" role="status">
           Carregando ciclos...
@@ -243,6 +246,7 @@ export default function Ciclos() {
         </div>
       ) : (
         <>
+          {/* Card View para telas móveis */}
           <div className="grid gap-4 md:hidden">
             {filteredCycles.map((cycle) => (
               <Card key={cycle.id}>
@@ -278,17 +282,18 @@ export default function Ciclos() {
             ))}
           </div>
 
+          {/* Tabela Formatada para Desktop */}
           <div className="hidden overflow-hidden rounded-lg border bg-card md:block">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ciclo</TableHead>
-                  <TableHead>Template</TableHead>
-                  <TableHead>Times</TableHead>
-                  <TableHead>Período</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Progresso</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="w-[25%]">Ciclo</TableHead>
+                  <TableHead className="w-[20%]">Template</TableHead>
+                  <TableHead className="w-[20%]">Times</TableHead>
+                  <TableHead className="w-[180px]">Período</TableHead>
+                  <TableHead className="w-[120px]">Status</TableHead>
+                  <TableHead className="w-[180px]">Progresso</TableHead>
+                  <TableHead className="w-[140px] text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -301,23 +306,25 @@ export default function Ciclos() {
                         ? "—"
                         : cycle.times.map((team) => team.nome).join(", ")}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{cycle.periodo}</TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">{cycle.periodo}</TableCell>
                     <TableCell><CycleStatus status={cycle.status} /></TableCell>
                     <TableCell><CycleProgress cycle={cycle} /></TableCell>
-                    <TableCell className="space-x-2 text-right">
-                      {cycle.status === "aberto" && (
-                        <Button variant="outline" size="sm" className="gap-1" onClick={() => { setCloseError(""); setCycleToClose(cycle); }}>
-                          <LockKeyhole size={14} /> Encerrar
+                    <TableCell className="whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {cycle.status === "aberto" && (
+                          <Button variant="outline" size="sm" className="gap-1" onClick={() => { setCloseError(""); setCycleToClose(cycle); }}>
+                            <LockKeyhole size={14} /> Encerrar
+                          </Button>
+                        )}
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-primary"
+                          onClick={cycle.status === "rascunho" ? () => openCycleConfiguration(cycle) : undefined}
+                        >
+                          {cycle.status === "rascunho" ? "Configurar" : cycle.status === "aberto" ? "Ver progresso" : "Ver resultados"}
                         </Button>
-                      )}
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-primary"
-                        onClick={cycle.status === "rascunho" ? () => openCycleConfiguration(cycle) : undefined}
-                      >
-                        {cycle.status === "rascunho" ? "Configurar" : cycle.status === "aberto" ? "Ver progresso" : "Ver resultados"}
-                      </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -327,6 +334,7 @@ export default function Ciclos() {
         </>
       )}
 
+      {/* Modais de ciclo, geração e encerramento */}
       <CicloModal
         open={modalOpen}
         onOpenChange={setModalOpen}

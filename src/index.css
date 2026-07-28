@@ -125,7 +125,29 @@
     * {
         @apply border-border outline-ring/50;
     }
+
+    /* 1. Previne que a página inteira estoure a largura da tela no celular */
+    html, body {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+
     body {
         @apply bg-background text-foreground font-sans;
     }
+
+    /* 2. Deixa imagens e mídias 100% flexíveis por padrão */
+    img, video, canvas, svg {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* 3. Evita que tabelas quebrem o layout mobile, criando uma rolagem só nelas */
+    table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
 }

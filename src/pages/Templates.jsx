@@ -119,7 +119,7 @@ export default function Templates() {
   };
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="w-full space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Templates de Competências</h1>
@@ -127,7 +127,7 @@ export default function Templates() {
             Conjuntos de competências avaliadas na escala 1–5. Clone um existente ou crie um novo template.
           </p>
         </div>
-        <Button onClick={() => navigate("/templates/novo")} className="gap-2">
+        <Button onClick={() => navigate("/templates/novo")} className="gap-2 shrink-0">
           <Plus size={16} /> Novo template
         </Button>
       </div>
@@ -159,7 +159,7 @@ export default function Templates() {
           <Button onClick={() => navigate("/templates/novo")}>Criar novo template</Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {templates.map((template) => {
             const isEditable = !template.ehPadrao && template.cycleCount === 0;
 
