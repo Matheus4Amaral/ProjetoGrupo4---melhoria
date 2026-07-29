@@ -29,3 +29,20 @@ export async function getClosedResult(cycleId) {
     })) : [],
   };
 }
+
+export async function getTeamFeedbackBase(cycleId, teamId) {
+  const { data, error } = await supabase.rpc("obter_feedback_time_base", {
+    p_ciclo_id: cycleId,
+    p_time_id: teamId,
+  });
+  
+  if (error) throw resultError(error, "Não foi possível carregar o feedback da equipe.");
+
+  return {
+    resumo: {
+      mediaGeral: data?.resumo?.mediaGeral ?? null,
+    },
+    criterios: Array.isArray(data?.criterios) ? data.criterios : [],
+    membros: Array.isArray(data?.membros) ? data.membros : [],
+  };
+}
