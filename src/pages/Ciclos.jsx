@@ -188,12 +188,8 @@ export default function Ciclos() {
   };
 
   return (
-<<<<<<< HEAD
     <div className="w-full space-y-6">
       {/* Cabeçalho */}
-=======
-    <div className="space-y-6">
->>>>>>> aa9af95e520642d1910e7ac972f497c4d06fe910
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Ciclos de Avaliação</h1>
